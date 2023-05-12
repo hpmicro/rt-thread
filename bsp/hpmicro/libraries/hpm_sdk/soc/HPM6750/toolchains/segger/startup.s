@@ -224,11 +224,13 @@ MARK_FUNC __SEGGER_init_done
 #endif
 
 #ifndef CONFIG_FREERTOS 
-    #define HANDLER_TRAP SW_handler
+    #define HANDLER_TRAP irq_handler_trap
 #else
     #define HANDLER_TRAP freertos_risc_v_trap_handler
-#endif
 
+    /* Use mscratch to store isr level */
+    csrw mscratch, 0
+#endif
 #ifndef USE_NONVECTOR_MODE
     /* Initial machine trap-vector Base */
     la t0, __vector_table

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 hpmicro
+ * Copyright (c) 2022 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -35,6 +35,6 @@ extern struct fal_flash_dev nor_flash0;
     {FAL_PART_MAGIC_WORD,  "download", NOR_FLASH_DEV_NAME,         7*1024*1024, 1*1024*1024,    0}, \
 }
 #endif /* FAL_PART_HAS_TABLE_CFG */
-#endif /* PKG_USING_FAL */
+#endif /* RT_USING_FAL */
 
 #endif /* _FAL_CFG_H_ */

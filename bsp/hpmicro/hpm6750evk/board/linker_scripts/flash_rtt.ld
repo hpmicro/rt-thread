@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2022 hpmicro
+ * Copyright 2021-2022 HPMicro
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -64,17 +64,18 @@ SECTIONS
 
         /* RT-Thread Core Start */
         KEEP(*context_gcc.o(.text* .rodata*))
-        KEEP(*cpuport.o (.text .text* .rodata .rodata*))
-        KEEP(*trap_entry.o (.text .text* .rodata .rodata*))
+        KEEP(*port*.o (.text .text* .rodata .rodata*))
+        KEEP(*interrupt_gcc.o (.text .text* .rodata .rodata*))
+        KEEP(*trap_common.o (.text .text* .rodata .rodata*))
         KEEP(*irq.o (.text .text* .rodata .rodata*))
         KEEP(*clock.o (.text .text* .rodata .rodata*))
         KEEP(*kservice.o (.text .text* .rodata .rodata*))
         KEEP(*scheduler.o (.text .text* .rodata .rodata*))
-        KEEP(*trap.o (.text .text* .rodata .rodata*))
+        KEEP(*trap*.o (.text .text* .rodata .rodata*))
         KEEP(*idle.o (.text .text* .rodata .rodata*))
         KEEP(*ipc.o (.text .text* .rodata .rodata*))
         KEEP(*thread.o (.text .text* .rodata .rodata*))
-		KEEP(*object.o (.text .text* .rodata .rodata*))
+        KEEP(*object.o (.text .text* .rodata .rodata*))
         KEEP(*timer.o (.text .text* .rodata .rodata*))
         KEEP(*mem.o (.text .text* .rodata .rodata*))
         KEEP(*mempool.o (.text .text* .rodata .rodata*))
@@ -181,10 +182,12 @@ SECTIONS
         PROVIDE(__finit_array_end = .);
 
         . = ALIGN(8);
+        PROVIDE(__ctors_start__ = .);
         KEEP(*crtbegin*.o(.ctors))
         KEEP(*(EXCLUDE_FILE (*crtend*.o) .ctors))
         KEEP(*(SORT(.ctors.*)))
         KEEP(*(.ctors))
+        PROVIDE(__ctors_end__ = .);
 
         . = ALIGN(8);
         KEEP(*crtbegin*.o(.dtors))
@@ -247,8 +250,8 @@ SECTIONS
         . += STACK_SIZE;
         . = ALIGN(8);
         PROVIDE (_stack = .);
-        PROVIDE( __rt_rvstack = . );
         PROVIDE (_stack_in_dlm = .);
+        PROVIDE (__rt_rvstack = .);
     } > AXI_SRAM
 
     __noncacheable_start__ = ORIGIN(SDRAM_NONCACHEABLE);
