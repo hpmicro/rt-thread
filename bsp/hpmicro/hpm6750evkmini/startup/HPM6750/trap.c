@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - 2022 hpmicro
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,6 @@
 #include "hpm_common.h"
 #include "hpm_soc.h"
 #include <rtthread.h>
-#include "rt_hw_stack_frame.h"
 
 #define MCAUSE_INSTR_ADDR_MISALIGNED (0U)       //!< Instruction Address misaligned
 #define MCAUSE_INSTR_ACCESS_FAULT (1U)          //!< Instruction access fault
@@ -37,10 +36,6 @@
 #define IRQ_HOST                13
 
 typedef void (*isr_func_t)(void);
-
-static volatile rt_hw_stack_frame_t *s_stack_frame;
-
-static void rt_show_stack_frame(void);
 
 __attribute((weak)) void mchtmr_isr(void)
 {
@@ -172,22 +167,15 @@ uint32_t exception_handler(uint32_t cause, uint32_t epc)
         rt_kprintf("Unknown exception happened, cause=%d\n", cause);
         break;
     }
-
-    rt_show_stack_frame();
-    while (1)
-    {
-    }
 }
 
-void trap_entry(rt_hw_stack_frame_t *stack_frame);
+void trap_entry(void);
 
-void trap_entry(rt_hw_stack_frame_t *stack_frame)
+void trap_entry(void)
 {
     uint32_t mcause = read_csr(CSR_MCAUSE);
     uint32_t mepc = read_csr(CSR_MEPC);
     uint32_t mstatus = read_csr(CSR_MSTATUS);
-
-    s_stack_frame = stack_frame;
 
 #if SUPPORT_PFT_ARCH
     uint32_t mxstatus = read_csr(CSR_MXSTATUS);
@@ -271,26 +259,4 @@ void trap_entry(rt_hw_stack_frame_t *stack_frame)
 #ifdef __riscv_flen
     write_fcsr(fcsr);
 #endif
-}
-
-static void rt_show_stack_frame(void)
-{
-    rt_kprintf("Stack frame:\r\n----------------------------------------\r\n");
-    rt_kprintf("ra      : 0x%08x\r\n", s_stack_frame->ra);
-    rt_kprintf("mstatus : 0x%08x\r\n", read_csr(CSR_MSTATUS));
-    rt_kprintf("t0      : 0x%08x\r\n", s_stack_frame->t0);
-    rt_kprintf("t1      : 0x%08x\r\n", s_stack_frame->t1);
-    rt_kprintf("t2      : 0x%08x\r\n", s_stack_frame->t2);
-    rt_kprintf("a0      : 0x%08x\r\n", s_stack_frame->a0);
-    rt_kprintf("a1      : 0x%08x\r\n", s_stack_frame->a1);
-    rt_kprintf("a2      : 0x%08x\r\n", s_stack_frame->a2);
-    rt_kprintf("a3      : 0x%08x\r\n", s_stack_frame->a3);
-    rt_kprintf("a4      : 0x%08x\r\n", s_stack_frame->a4);
-    rt_kprintf("a5      : 0x%08x\r\n", s_stack_frame->a5);
-    rt_kprintf("a6      : 0x%08x\r\n", s_stack_frame->a6);
-    rt_kprintf("a7      : 0x%08x\r\n", s_stack_frame->a7);
-    rt_kprintf("t3      : 0x%08x\r\n", s_stack_frame->t3);
-    rt_kprintf("t4      : 0x%08x\r\n", s_stack_frame->t4);
-    rt_kprintf("t5      : 0x%08x\r\n", s_stack_frame->t5);
-    rt_kprintf("t6      : 0x%08x\r\n", s_stack_frame->t6);
 }

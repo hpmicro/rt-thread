@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - 2022 hpmicro
+ * Copyright 2021-2022 HPMicro
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -25,16 +25,16 @@ MEMORY
 
 SECTIONS
 {
+    .start : {
+        . = ALIGN(8);
+        KEEP(*(.start))
+    } > AXI_SRAM
+
     .vectors : {
         . = ALIGN(8);
         KEEP(*(.isr_vector))
         KEEP(*(.vector_table))
         . = ALIGN(8);
-    } > AXI_SRAM
-
-    .start : {
-        . = ALIGN(8);
-        KEEP(*(.start))
     } > AXI_SRAM
 
     .text : {
@@ -114,8 +114,8 @@ SECTIONS
         KEEP(*(.dynamic))
         KEEP(*(.got*))
         KEEP(*(.got))
-        KEEP(*(.gcc_execpt_table))
-        KEEP(*(.gcc_execpt_table.*))
+        KEEP(*(.gcc_except_table))
+        KEEP(*(.gcc_except_table.*))
 
         . = ALIGN(8);
         PROVIDE(__preinit_array_start = .);
@@ -135,10 +135,12 @@ SECTIONS
         PROVIDE(__finit_array_end = .);
 
         . = ALIGN(8);
+        PROVIDE(__ctors_start__ = .);
         KEEP(*crtbegin*.o(.ctors))
         KEEP(*(EXCLUDE_FILE (*crtend*.o) .ctors))
         KEEP(*(SORT(.ctors.*)))
         KEEP(*(.ctors))
+        PROVIDE(__ctors_end__ = .);
 
         . = ALIGN(8);
         KEEP(*crtbegin*.o(.dtors))
@@ -160,7 +162,7 @@ SECTIONS
         . = ALIGN(8);
         PROVIDE(__ramfunc_end__ = .);
     } > AXI_SRAM
-    
+
     .noncacheable : AT(etext + __data_end__ - __data_start__ + __ramfunc_end__ - __ramfunc_start__){
         . = ALIGN(8);
         __noncacheable_init_start__ = .;
@@ -198,6 +200,7 @@ SECTIONS
         . += STACK_SIZE;
         PROVIDE (_stack = .);
         PROVIDE (_stack_in_dlm = .);
+        PROVIDE (__rt_rvstack = .);
     } > DLM
 
     .framebuffer (NOLOAD) : {

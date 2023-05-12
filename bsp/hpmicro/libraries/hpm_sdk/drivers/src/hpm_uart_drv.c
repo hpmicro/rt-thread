@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 hpmicro
+ * Copyright (c) 2021 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -33,6 +33,12 @@ void uart_default_config(UART_Type *ptr, uart_config_t *config)
     config->modem_config.auto_flow_ctrl_en = false;
     config->modem_config.loop_back_en = false;
     config->modem_config.set_rts_high = false;
+#if defined(UART_SOC_HAS_RXLINE_IDLE_DETECTION) && (UART_SOC_HAS_RXLINE_IDLE_DETECTION == 1)
+    config->rxidle_config.detect_enable = false;
+    config->rxidle_config.detect_irq_enable = false;
+    config->rxidle_config.idle_cond = uart_rxline_idle_cond_rxline_logic_one;
+    config->rxidle_config.threshold = 10; /* 10-bit for typical UART configuration (8-N-1) */
+#endif
 }
 
 static bool uart_calculate_baudrate(uint32_t freq, uint32_t baudrate, uint16_t *div_out, uint8_t *osc_out)
@@ -105,7 +111,7 @@ hpm_stat_t uart_init(UART_Type *ptr, uart_config_t *config)
     tmp = ptr->LCR & (~UART_LCR_DLAB_MASK);
 
     tmp &= ~(UART_LCR_SPS_MASK | UART_LCR_EPS_MASK | UART_LCR_PEN_MASK);
-    switch(config->parity) {
+    switch (config->parity) {
     case parity_none:
         break;
     case parity_odd:
@@ -127,7 +133,7 @@ hpm_stat_t uart_init(UART_Type *ptr, uart_config_t *config)
     }
 
     tmp &= ~(UART_LCR_STB_MASK | UART_LCR_WLS_MASK);
-    switch(config->num_of_stop_bits) {
+    switch (config->num_of_stop_bits) {
     case stop_bits_1:
         break;
     case stop_bits_1_5:
@@ -158,7 +164,12 @@ hpm_stat_t uart_init(UART_Type *ptr, uart_config_t *config)
     }
 
     uart_modem_config(ptr, &config->modem_config);
+
+#if defined(UART_SOC_HAS_RXLINE_IDLE_DETECTION) && (UART_SOC_HAS_RXLINE_IDLE_DETECTION == 1)
+    return uart_init_rxline_idle_detection(ptr, config->rxidle_config);
+#else
     return status_success;
+#endif
 }
 
 hpm_stat_t uart_set_baudrate(UART_Type *ptr, uint32_t baudrate, uint32_t src_clock_hz)
@@ -240,12 +251,9 @@ hpm_stat_t uart_receive_byte(UART_Type *ptr, uint8_t *byte)
 
 void uart_set_signal_level(UART_Type *ptr, uart_signal_t signal, uart_signal_level_t level)
 {
-    if (level == uart_signal_level_low)
-    {
+    if (level == uart_signal_level_low) {
         ptr->MCR = (ptr->MCR | signal);
-    }
-    else
-    {
+    } else {
         ptr->MCR = (ptr->MCR & ~signal);
     }
 }
@@ -269,3 +277,21 @@ hpm_stat_t uart_send_data(UART_Type *ptr, uint8_t *source, uint32_t size_in_byte
     }
     return status_success;
 }
+
+
+#if defined(UART_SOC_HAS_RXLINE_IDLE_DETECTION) && (UART_SOC_HAS_RXLINE_IDLE_DETECTION == 1)
+hpm_stat_t uart_init_rxline_idle_detection(UART_Type *ptr, uart_rxline_idle_config_t rxidle_config)
+{
+    ptr->RXIDLE_CFG = UART_RXIDLE_CFG_DETECT_EN_SET(rxidle_config.detect_enable)
+                      | UART_RXIDLE_CFG_THR_SET(rxidle_config.threshold)
+                      | UART_RXIDLE_CFG_DETECT_COND_SET(rxidle_config.idle_cond);
+
+    if (rxidle_config.detect_irq_enable) {
+        uart_enable_irq(ptr, uart_intr_rx_line_idle);
+    } else {
+        uart_disable_irq(ptr, uart_intr_rx_line_idle);
+    }
+
+    return status_success;
+}
+#endif

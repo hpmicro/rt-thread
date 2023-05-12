@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 hpmicro
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -47,6 +47,7 @@ _start:
     /* Initialize trap_entry base */
     la t0, SW_handler
     csrw mtvec, t0
+
 
     /* System reset handler */
     call reset_handler

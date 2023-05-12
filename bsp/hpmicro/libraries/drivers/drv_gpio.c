@@ -1,12 +1,13 @@
 /*
- * Copyright (c) 2021 hpm
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Change Logs:
  * Date         Author      Notes
- * 2022-01-11   hpmicro     First version
- * 2022-07-28   hpmicro     Fixed compiling warnings
+ * 2022-01-11   HPMicro     First version
+ * 2022-07-28   HPMicro     Fixed compiling warnings
+ * 2023-05-08   HPMicro     Adapt RT-Thread V5.0.0
  */
 
 #include <rtthread.h>
@@ -19,6 +20,7 @@
 #include "hpm_gpio_drv.h"
 #include "hpm_gpiom_drv.h"
 #include "hpm_clock_drv.h"
+#include "hpm_soc_feature.h"
 
 typedef struct
 {
@@ -56,7 +58,7 @@ static const gpio_irq_map_t hpm_gpio_irq_map[] = {
 #endif
         };
 
-static struct rt_pin_irq_hdr hpm_gpio_pin_hdr_tbl[IOC_PAD_PZ11];
+static struct rt_pin_irq_hdr hpm_gpio_pin_hdr_tbl[IOC_SOC_PAD_MAX];
 
 static int hpm_get_gpi_irq_num(uint32_t gpio_idx)
 {
@@ -219,7 +221,7 @@ static rt_int8_t hpm_pin_read(rt_device_t dev, rt_base_t pin)
     uint32_t gpio_idx = pin >> 5;
     uint32_t pin_idx = pin & 0x1FU;
 
-    return (rt_int8_t) gpio_read_pin(HPM_GPIO0, gpio_idx, pin_idx);
+    return (int) gpio_read_pin(HPM_GPIO0, gpio_idx, pin_idx);
 }
 
 static void hpm_pin_write(rt_device_t dev, rt_base_t pin, rt_uint8_t value)
@@ -231,8 +233,11 @@ static void hpm_pin_write(rt_device_t dev, rt_base_t pin, rt_uint8_t value)
     gpio_write_pin(HPM_GPIO0, gpio_idx, pin_idx, value);
 }
 
-static rt_err_t hpm_pin_attach_irq(struct rt_device *device, rt_base_t pin, rt_uint8_t mode,
-        void (*hdr)(void *args), void *args)
+static rt_err_t hpm_pin_attach_irq(struct rt_device *device,
+                                   rt_base_t pin,
+                                   rt_uint8_t mode,
+                                   void (*hdr)(void *args),
+                                   void *args)
 {
 
     rt_base_t level;
@@ -297,7 +302,7 @@ static rt_err_t hpm_pin_irq_enable(struct rt_device *device, rt_base_t pin, rt_u
     }
     else
     {
-        return -RT_EINVAL;
+        return RT_EINVAL;
     }
 
     return RT_EOK;

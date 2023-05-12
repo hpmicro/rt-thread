@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2021 hpmicro
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Change Logs:
  * Date         Author      Notes
- * 2021-09-19   HPMICRO     First version
+ * 2021-09-19   HPMicro     First version
+ * 2023-05-08   HPMicro     Adapt RT-Thread V5.0.0
  */
 #include "board.h"
 #include "drv_rtc.h"
@@ -86,7 +87,7 @@ static rt_err_t hpm_rtc_control(rt_device_t dev, int cmd, void *args)
             hpm_rtc_set_timestamp(*(time_t *)args);
             break;
         default:
-            err = -RT_EINVAL;
+            err = RT_EINVAL;
             break;
     }
 

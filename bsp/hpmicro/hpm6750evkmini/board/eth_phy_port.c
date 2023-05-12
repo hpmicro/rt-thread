@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - 2022 hpmicro
+ * Copyright (c) 2021-2023 HPMicro
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -156,6 +156,7 @@ static void phy_poll_status(void *parameter)
     phy_device_t *phy_dev;
     struct eth_device* eth_dev;
     char const *ps[] = {"10Mbps", "100Mbps", "1000Mbps"};
+    enet_line_speed_t line_speed[] = {enet_line_speed_10mbps, enet_line_speed_100mbps, enet_line_speed_1000mbps};
 
     eth_phy_monitor_handle_t *phy_monitor_handle = (eth_phy_monitor_handle_t *)parameter;
 
@@ -186,6 +187,8 @@ static void phy_poll_status(void *parameter)
             {
                 LOG_I("PHY Speed: %s", ps[phy_dev->phy_info.phy_speed]);
                 LOG_I("PHY Duplex: %s\n", phy_dev->phy_info.phy_duplex & PHY_FULL_DUPLEX ? "full duplex" : "half duplex");
+                enet_set_line_speed(phy_monitor_handle->phy_handle[i]->instance, line_speed[phy_dev->phy_info.phy_speed]);
+                enet_set_duplex_mode(phy_monitor_handle->phy_handle[i]->instance, phy_dev->phy_info.phy_duplex);
             }
         }
     }
