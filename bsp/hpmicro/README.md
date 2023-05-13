@@ -3,7 +3,7 @@
 ## 1. 简介
 
 HPMicro BSP为先楫提供的RT-Thread 板级支持包，基于[hpm_sdk](https://github.com/hpmicro/hpm_sdk) 开发。
-提供典型的RT-Thread 驱动的支持。
+提供对常用外设的 RT-Thread 驱动支持。
 
 ### 芯片支持列表
 
@@ -11,6 +11,24 @@ HPMicro BSP为先楫提供的RT-Thread 板级支持包，基于[hpm_sdk](https:/
 - HPM64xx
 - HPM63xx
 - HPM62xx
+
+### 目录结构
+
+典型的BSP目录结构如下：
+
+```console
+hpmicro
+|-- docs
+|-- libraries
+|-- <board>
+    |-- applications
+    |-- board
+    |-- startup
+    |-- rtconfig.h
+    |-- rtconfigy.py
+    |-- SConscript
+    |-- SConstruct
+```
 
 ## 2. 开发板支持列表
 
@@ -50,13 +68,13 @@ HPMicro BSP为先楫提供的RT-Thread 板级支持包，基于[hpm_sdk](https:/
 
 #### 4.1.1 准备工具链
 
-- 下载通用[RISC-V toolchain](https://github.com/helloeagleyang/riscv32-gnu-toolchain-win/archive/2022.04.12.zip)并解压到相应的目录，如 `C:\DevTools\riscv32-gnu-toolchain`
+- 下载通用[RISC-V toolchain](https://gitee.com/devinfanyang/hpmicro-toolchain-debugger/blob/master/riscv32-gnu-toolchain-win.zip)并解压到相应的目录，如 `C:\DevTools\riscv32-gnu-toolchain`
 - 设置环境变量 `RTT_RISCV_TOOLCHAIN`，如 `C:\DevTools\riscv32-gnu-toolchain\bin`
 - 下载 [env 工具](https://www.rt-thread.org/download.html#download-rt-thread-env-tool)
 
 #### 4.1.2 准备调试工具
 
-- 下载[openocd](https://github.com/hpmicro/rtt-debugger-support-package/archive/v0.3.0.zip)并解压到相应目录，如`C:\DevTools\openocd`
+- 下载[openocd](https://gitee.com/devinfanyang/hpmicro-toolchain-debugger/blob/master/openocd-win.zip)并解压到相应目录，如`C:\DevTools\openocd`
 - 将opencod将到系统环境变量中
 
 #### 4.1.3 编译
@@ -71,16 +89,52 @@ HPMicro BSP为先楫提供的RT-Thread 板级支持包，基于[hpm_sdk](https:/
 
 更新完软件包后，执行 `scons -j10` 或 `scons -j10 --verbose` 来编译这个板级支持包。如果编译正确无误，会产生rtthread.elf、rtthread.bin文件
 
+### 4.2 Linux系统下的环境搭建与编译
+
+### 4.2.1 准备工具链
+
+- 下载通用[RISC-V toolchain](https://gitee.com/devinfanyang/hpmicro-toolchain-debugger/blob/master/riscv32-gnu-toolchain-linux.zip)并解压到相应的目录，如 `${HOME}/DevTools/riscv32-gnu-toolchain`
+- 设置环境变量 `RTT_RISCV_TOOLCHAIN`，如 `export RTT_RISCV_TOOLCHAIN=${HOME}/DevTools/riscv32-gnu-toolchain/bin`
+
+#### 4.2.2 准备调试工具
+
+- 下载[openocd](https://gitee.com/devinfanyang/hpmicro-toolchain-debugger/blob/master/openocd-linux.zip)并解压到相应目录，如`${HOME}/DevTools/openocd`
+- 将opencod将到系统环境变量中, 如 `export PATH=$PATH:${HOME}/DevTools/openocd`
+
+### 4.2.3 编译
+
+先执行：
+
+```shell
+    cd bsp/hpmicro/hpm6750evkmini
+    scons --menuconfig
+```
+
+它会自动下载env相关脚本到~/.env目录，然后执行
+
+```shell
+    source ~/.env/env.sh
+
+    cd bsp/bouffalo_lab/bl61x
+    pkgs --update
+```
+
+更新完软件包后，执行 `scons -j10` 或 `scons -j10 --verbose` 来编译这个板级支持包。如果编译正确无误，会产生rtthread.elf、rtthread.bin文件
+
 ## 5. 下载
 
 ### 5.1 通过openocd 下载
 
 以`hpm6750evkmini`为例:
 
+将开发板`BOOT`引脚拨为 0-OFF，1-ON，按一下复位键
+
 ```shell
 cd bsp/hpmicro/hpm6750evkmini
 openocd -f board/debug_scripts/openocd/probes/ft2232.cfg -f board/debug_scripts/openocd/soc/hpm6750-single-core.cfg -f board/debug_scripts/openocd/boards/hpm6750evkmini.cfg -c "init; halt; flash write_image erase rtthread.elf; reset; shutdown"
 ```
+
+将开发板`BOOT`引脚拨为 0-OFF，1-OFF，按一下复位键
 
 ### 5.2 通过烧写工具下载
 
@@ -135,4 +189,6 @@ riscv32-unknown-elf-gdb rtthread.elf
 
 - 先楫官方资源
   - 官方网站：<https://www.hpmicro.com>
-  - 官方仓库：<https://github.com/hpmicro>, <https://gitee.com/hpmicro>
+  - 官方仓库：
+    - GitHub: <https://github.com/hpmicro>
+    - Gitee: <https://gitee.com/hpmicro>
