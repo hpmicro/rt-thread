@@ -764,9 +764,11 @@ static int hpm_uart_dma_config(struct rt_serial_device *serial, void *arg)
         }
         uint32_t mux = DMA_SOC_CHN_TO_DMAMUX_CHN(uart->rx_chn_ctx.resource.base, uart->rx_dma_mux);
         dmamux_config(BOARD_UART_DMAMUX, uart->rx_chn_ctx.resource.channel, mux, true);
- #if !defined(UART_SOC_HAS_RXLINE_IDLE_DETECTION) || (UART_SOC_HAS_RXLINE_IDLE_DETECTION == 0)
+#if !defined(UART_SOC_HAS_RXLINE_IDLE_DETECTION) || (UART_SOC_HAS_RXLINE_IDLE_DETECTION == 0)
         hpm_uart_dma_register_channel(serial, false, uart_rx_done, RT_NULL, RT_NULL);
         intc_m_enable_irq(uart->rx_chn_ctx.resource.irq_num);
+#else
+        intc_m_enable_irq_with_priority(uart->irq_num, 1);
 #endif
     } else if (ctrl_arg == RT_DEVICE_FLAG_DMA_TX) {
         uint32_t mux = DMA_SOC_CHN_TO_DMAMUX_CHN(uart->tx_chn_ctx.resource.base, uart->tx_dma_mux);
@@ -915,12 +917,17 @@ static rt_ssize_t hpm_uart_transmit(struct rt_serial_device *serial,
     RT_ASSERT(serial != RT_NULL);
     RT_ASSERT(buf != RT_NULL);
     RT_ASSERT(size);
-
 #ifdef RT_SERIAL_USING_DMA
     struct hpm_uart *uart  = (struct hpm_uart *)serial->parent.user_data;
     if (uart->dma_flags & RT_DEVICE_FLAG_DMA_TX) {
         hpm_uart_dma_register_channel(serial, true, uart_tx_done, RT_NULL, RT_NULL);
         intc_m_enable_irq(uart->tx_chn_ctx.resource.irq_num);
+        if (l1c_dc_is_enabled()) {
+            uint32_t aligned_start = HPM_L1C_CACHELINE_ALIGN_DOWN((uint32_t)buf);
+            uint32_t aligned_end = HPM_L1C_CACHELINE_ALIGN_UP((uint32_t)buf + sizeof(buf));
+            uint32_t aligned_size = aligned_end - aligned_start;
+            l1c_dc_flush(aligned_start, aligned_size);
+        }
         hpm_uart_transmit_dma(uart->tx_chn_ctx.resource.base, uart->tx_chn_ctx.resource.channel, uart->uart_base, buf, size);
         return size;
     }
