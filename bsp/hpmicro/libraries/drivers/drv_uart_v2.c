@@ -764,7 +764,7 @@ static int hpm_uart_dma_config(struct rt_serial_device *serial, void *arg)
         }
         uint32_t mux = DMA_SOC_CHN_TO_DMAMUX_CHN(uart->rx_chn_ctx.resource.base, uart->rx_dma_mux);
         dmamux_config(BOARD_UART_DMAMUX, uart->rx_chn_ctx.resource.channel, mux, true);
-#if !defined(UART_SOC_HAS_RXLINE_IDLE_DETECTION) || (UART_SOC_HAS_RXLINE_IDLE_DETECTION == 0)
+ #if !defined(UART_SOC_HAS_RXLINE_IDLE_DETECTION) || (UART_SOC_HAS_RXLINE_IDLE_DETECTION == 0)
         hpm_uart_dma_register_channel(serial, false, uart_rx_done, RT_NULL, RT_NULL);
         intc_m_enable_irq(uart->rx_chn_ctx.resource.irq_num);
 #else
